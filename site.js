@@ -420,8 +420,9 @@
     if(th !== navTheme){ navTheme = th; nav.setAttribute('data-on', th); }
   }
 
-  /* ---------- A = the page scrolls itself at the films' natural speed, for screen-recording a reel ---------- */
-  var auto = 0, autoLast = 0, autoMult = 1;
+  /* ---------- A = the page scrolls itself, for screen-recording a reel. AUTO_BASE is the speed A starts at, relative to the films' natural speed ---------- */
+  var AUTO_BASE = 1.3;
+  var auto = 0, autoLast = 0, autoMult = AUTO_BASE, autoY = 0;
   function stopAuto(){
     if(!auto) return;
     cancelAnimationFrame(auto); auto = 0;
@@ -432,7 +433,7 @@
     if(auto) return;
     if(lenis) lenis.stop();
     body.classList.add('touring');
-    autoLast = performance.now();
+    autoLast = performance.now(); autoY = window.scrollY || window.pageYOffset;
     var step = function(now){
       var dt = Math.min((now - autoLast) / 1000, 0.1); autoLast = now;
       var vh = vhpx(), speed = vh * 0.42;                       /* ordinary sections */
@@ -440,10 +441,12 @@
         var s = scenes[i], g = geom(s);
         if(g.y >= g.growPx && g.y < g.growPx + g.lenPx){ speed = g.lenPx / s.dur; break; }   /* inside a film: real time */
       }
-      var y = (window.scrollY || window.pageYOffset) + speed * autoMult * dt;
+      /* the position is kept as a fraction here: the browser rounds scrollY to whole pixels, and adding to the rounded value each frame made the real speed drift from the requested one */
+      var cur = window.scrollY || window.pageYOffset; if(Math.abs(cur - autoY) > 3) autoY = cur;
+      autoY += speed * autoMult * dt;
       var max = docEl.scrollHeight - window.innerHeight;
-      window.scrollTo(0, Math.min(y, max));
-      if(y >= max - 1){ stopAuto(); return; }
+      window.scrollTo(0, Math.min(autoY, max));
+      if(autoY >= max - 1){ stopAuto(); return; }
       auto = requestAnimationFrame(step);
     };
     auto = requestAnimationFrame(step);
@@ -454,7 +457,7 @@
     var t = e.target;
     if(t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     if(e.metaKey || e.ctrlKey || e.altKey) return;
-    if(e.key === '1' || e.key === '2' || e.key === '3'){ autoMult = e.key === '1' ? 1 : (e.key === '2' ? 1.5 : 2); return; }
+    if(e.key === '1' || e.key === '2' || e.key === '3'){ autoMult = e.key === '1' ? AUTO_BASE : (e.key === '2' ? 1.5 : 2); return; }
     if(e.key === 'a' || e.key === 'A'){ if(!e.repeat){ if(auto) stopAuto(); else startAuto(); } return; }
     if(auto && /^(Arrow|Page|Home|End|Escape| )/.test(e.key)) stopAuto();
   });
