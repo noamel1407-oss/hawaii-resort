@@ -39,7 +39,7 @@
     this.poster = scene.querySelector('.poster');
     this.name = scene.getAttribute('data-film');
     this.tall = (window.innerWidth / window.innerHeight) <= 0.62;
-    this.base = 'media/' + this.name + (this.tall ? '-tall' : '-wide') + '-v2';
+    this.base = 'media/' + this.name + (this.tall ? '-tall-v3' : '-wide-v2');   /* tall-v3: the phone window travels across the wide film instead of staying on its centre */
     this.meta = null; this.buf = null; this.off = null; this.loaded = 0; this.complete = false;
     this.mode = 'none';              /* none | codec | video */
     this.decoder = null; this.busy = false; this.gen = 0;
