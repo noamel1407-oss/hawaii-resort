@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>כושר ויוגה · NOHOKAI</title>
+<meta name="description" content="חדר כושר שכולו נוף, סטודיו ליוגה מול הדקלים, ומשם כמה צעדים עד הים. סיור חי בריזורט.">
+<meta name="theme-color" content="#0A0F11">
+<meta property="og:type" content="website">
+<meta property="og:title" content="כושר ויוגה · NOHOKAI">
+<meta property="og:site_name" content="NOHOKAI Resort &amp; Spa">
+<meta property="og:description" content="חדר כושר שכולו נוף, סטודיו ליוגה מול הדקלים, ומשם כמה צעדים עד הים. סיור חי בריזורט.">
+<meta property="og:image" content="https://noamel1407-oss.github.io/hawaii-resort/media/share.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230A0F11'/%3E%3Cg fill='none' stroke='%23E6D0A8' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M17 34A15 15 0 0 1 47 34'/%3E%3Cpath d='M9 34H55'/%3E%3Cpath d='M20 41H44'/%3E%3Cpath d='M27 48H37'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Frank+Ruhl+Libre:wght@300;400&family=Heebo:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<noscript><style>#veil{display:none}.stage .lead,.fin{opacity:1;pointer-events:auto}.lead-in > *,.fin-in > *{opacity:1;transform:none}</style></noscript>
+</head>
+<body>
+<nav id="nav">
+  <a class="brand" href="index.html" aria-label="NOHOKAI, לעמוד הבית"><svg viewBox="0 0 68 44" fill="none" stroke="#E6D0A8" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M14 25A20 20 0 0 1 54 25"/><path d="M2 25H66"/><path d="M17 32.5H51"/><path d="M26 40H42"/></svg><span>NOHOKAI</span></a>
+  <div class="nav-right">
+    <div class="nav-links" id="navlinks">
+      <a href="index.html">הריזורט</a>
+      <a href="wellness.html" aria-current="page">כושר ויוגה</a>
+    </div>
+    <a class="nav-cta" href="contact.html">להשארת פרטים</a>
+    <button class="burger" id="burger" type="button" aria-label="תפריט" aria-expanded="false" aria-controls="navlinks">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<main>
+<div class="scene" id="film" data-dur="25.8" data-share="0.84" style="height:1020vh">
+  <div class="stage">
+    <picture>
+      <source media="(max-aspect-ratio: 4/5)" srcset="media/wellness-tall.jpg">
+      <img class="poster" src="media/wellness-wide.jpg" alt="ביתן חדר הכושר והיוגה ליד הבריכה">
+    </picture>
+    <video muted playsinline webkit-playsinline preload="auto" tabindex="-1" aria-hidden="true"
+           data-wide="media/wellness-wide.mp4" data-tall="media/wellness-tall.mp4"></video>
+    <div class="shade"></div>
+    <div class="loading">טוען את הסיור</div>
+    <div class="caps">
+      <div class="cap on" data-in="0" data-out="5.0">
+        <div class="label"><b>05</b> <i></i> Fitness</div>
+        <h1><span class="ln">מי שאוהב להתחיל את היום בתנועה,</span><span class="ln">ימצא כאן חדר כושר שכולו נוף.</span></h1>
+        <div class="rule"></div>
+      </div>
+      <div class="cap" data-in="8.0" data-out="12.2">
+        <div class="label"><b>06</b> <i></i> Yoga Studio</div>
+        <h2><span class="ln">ומי שמעדיף להאט,</span><span class="ln">סטודיו ליוגה מול הדקלים.</span></h2>
+      </div>
+      <div class="cap" data-in="15.8" data-out="19.5">
+        <div class="label"><b>07</b> <i></i> The Ocean</div>
+        <h2><span class="ln">ומכאן, כמה צעדים,</span><span class="ln">והים כבר שלכם.</span></h2>
+      </div>
+      <div class="cap" data-in="21.6" data-out="24.9">
+        <div class="label"><b>08</b> <i></i> The Resort</div>
+        <h2><span class="ln">החופשה שתרצו לחזור אליה.</span></h2>
+      </div>
+    </div>
+    <div class="tour-ui wait">
+      <button class="play" id="play" type="button" aria-pressed="false"><i class="ico"></i><span class="t">סיור חי</span></button>
+      <div class="hint">או גללו</div>
+    </div>
+    <div class="hud"><div class="bar"><i></i></div></div>
+    <div class="lead" id="leadWrap">
+      <div class="lead-in">
+        <div class="label" dir="ltr">Nohokai Resort &amp; Spa</div>
+        <div class="lead-rule"></div>
+        <h2>החופשה הבאה שלכם מתחילה כאן</h2>
+        <p class="lead-p">השאירו פרטים ונחזור אליכם עם תאריכים פנויים, סוגי החדרים והצעת מחיר לחופשה שלכם.</p>
+        <form class="lead-form" id="lead" novalidate>
+          <div class="field"><label for="fn">שם מלא</label>
+            <input id="fn" name="name" required autocomplete="name"></div>
+          <div class="field"><label for="ph">טלפון</label>
+            <input id="ph" name="phone" type="tel" dir="ltr" inputmode="tel" required autocomplete="tel"></div>
+          <div class="field"><label for="em">אימייל</label>
+            <input id="em" name="email" type="email" dir="ltr" autocomplete="email"></div>
+          <div class="field"><label for="tp">סוג החופשה</label>
+            <select id="tp" name="stay" required>
+              <option value="" disabled selected>בחרו סוג חופשה</option>
+              <option>חופשה זוגית</option><option>חופשה משפחתית</option>
+              <option>ירח דבש</option><option>אירוע או קבוצה</option>
+            </select></div>
+          <button class="btn" type="submit" id="send">שליחה בוואטסאפ</button>
+        </form>
+        <div class="note">בלחיצה על שליחה ייפתח וואטסאפ עם הפרטים שמילאתם, ותצטרכו לאשר את השליחה. הפרטים משמשים ליצירת קשר בנוגע לחופשה בלבד.</div>
+        <div class="direct">
+          <span>וואטסאפ <a dir="ltr" href="https://wa.me/972544500539">054-450-0539</a></span>
+          <span>מייל <a dir="ltr" href="mailto:netora.studio@gmail.com">netora.studio@gmail.com</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+<div class="wrap">
+  <footer>
+    <div class="f-a"><span>NOHOKAI</span><span>Resort &amp; Spa · Hawaii</span></div>
+    <div class="f-legal" role="navigation" aria-label="מידע משפטי">
+      <a href="privacy.html">מדיניות פרטיות</a>
+      <a href="terms.html">תנאי שימוש</a>
+      <a href="accessibility.html">הצהרת נגישות</a>
+    </div>
+    <div class="f-b">
+      <span>&copy; <span id="yr">2026</span> NOHOKAI Resort &amp; Spa · כל הזכויות שמורות</span>
+      <span class="f-by">האתר נבנה על ידי <a href="https://www.instagram.com/netora._studio/" target="_blank" rel="noopener">Netora Studio</a></span>
+    </div>
+  </footer>
+</div>
+<div id="veil" aria-hidden="true"></div>
+<script src="site.js"></script>
+</body>
+</html>
