@@ -56,7 +56,7 @@ body.ready #pre{transform:translate3d(0,-101%,0)}
 .nav-links a:hover{opacity:1}
 .cta{font-family:var(--heb);font-size:15px;font-weight:500;text-decoration:none;padding:10px 20px;border-radius:999px;border:1px solid currentColor;
   transition:background .25s,color .25s,border-color .25s;white-space:nowrap}
-#nav[data-on="film"] .cta{background:rgba(251,247,239,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#nav[data-on="film"] .cta{background:rgba(8,22,21,.22)}
 #nav[data-on="film"] .cta:hover{background:var(--film);color:var(--ink)}
 #nav[data-on="ink"] .cta{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 #nav[data-on="ink"] .cta:hover{background:var(--teal);border-color:var(--teal)}
@@ -72,9 +72,12 @@ body.ready #pre{transform:translate3d(0,-101%,0)}
 
 /* ---------- film scenes ---------- */
 .scene{position:relative;background:var(--cream)}
-.stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
-.frame{position:absolute;inset:0;overflow:hidden;background:#0c1716;
-  --k:1;clip-path:inset(calc((1 - var(--k)) * 15vh) calc((1 - var(--k)) * 7vw) calc((1 - var(--k)) * 9vh) calc((1 - var(--k)) * 7vw) round calc((1 - var(--k)) * 26px))}
+/* the film stage is as tall as the LARGE viewport and never resizes; the text over it sits in a layer that follows the visible area */
+.stage{position:sticky;top:0;height:100vh;height:100lvh;overflow:hidden}
+.ui{position:absolute;left:0;right:0;top:0;height:100vh;height:100dvh;z-index:4;pointer-events:none}
+.frame{position:absolute;inset:0;overflow:hidden;background:#0c1716}
+.scene[data-grow] .frame{--k:0;clip-path:inset(calc((1 - var(--k)) * 15vh) calc((1 - var(--k)) * 7vw) calc((1 - var(--k)) * 9vh) calc((1 - var(--k)) * 7vw) round calc((1 - var(--k)) * 26px))}
+.scene[data-grow].full .frame{clip-path:none}
 .frame .poster,.frame canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .frame canvas{opacity:0;transition:opacity .35s ease}
 .scene.live .frame canvas{opacity:1}
@@ -145,14 +148,15 @@ body.ready .hero-row{opacity:1}
 
 /* ---------- around the resort: the page scrolls down, the places travel sideways ---------- */
 .places{position:relative;background:var(--cream)}
-.places-pin{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:calc(64px + 2vh) 0 max(26px,4vh)}
+.places-pin{position:sticky;top:0;height:100vh;height:100lvh;overflow:hidden}
+.places-in{height:100vh;height:100svh;display:flex;flex-direction:column;justify-content:center;padding:calc(64px + 2vh) 0 max(26px,4vh)}
 .places-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding:0 var(--pad);margin-bottom:clamp(16px,3.4vh,40px)}
 .places-head h2{font-family:var(--serif);font-weight:400;font-size:clamp(34px,4.6vw,76px);line-height:1;letter-spacing:-.01em}
 .places-head h2 em{font-style:italic}
 .places-head .hint{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;color:var(--mute);white-space:nowrap}
 .viewport{overflow:hidden;padding:0 var(--pad)}
 .track{display:flex;gap:clamp(14px,2vw,30px);will-change:transform;width:max-content}
-.place{flex:none;width:min(31vw,calc((100dvh - 300px) * .8));min-width:260px}
+.place{flex:none;width:min(31vw,calc((100vh - 300px) * .8));width:min(31vw,calc((100svh - 300px) * .8));min-width:260px}
 .place .pic{position:relative;overflow:hidden;border-radius:16px;aspect-ratio:4/5;background:#d9d0bd}
 .place .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.2);will-change:transform}
 .place .row{display:flex;gap:14px;align-items:baseline;margin-top:16px}
@@ -162,14 +166,14 @@ body.ready .hero-row{opacity:1}
 .rail-prog{height:2px;background:var(--line);margin:clamp(16px,3vh,34px) var(--pad) 0}
 .rail-prog i{display:block;height:100%;background:var(--ink);transform-origin:left center;transform:scaleX(0)}
 @media(max-width:760px){
-  .place{width:min(74vw,calc((100dvh - 290px) * .8));min-width:220px}
+  .place{width:min(74vw,calc((100vh - 290px) * .8));width:min(74vw,calc((100svh - 290px) * .8));min-width:220px}
   .places-head .hint{display:none}
   .place p{font-size:14px}
 }
 
-@media(min-width:761px) and (orientation:portrait){.place{width:min(46vw,calc((100dvh - 300px) * .8))}}
+@media(min-width:761px) and (orientation:portrait){.place{width:min(46vw,calc((100svh - 300px) * .8))}}
 @media(max-height:560px) and (orientation:landscape){
-  .places-pin{padding-top:58px}
+  .places-in{padding-top:58px}
   .places-head{margin-bottom:10px}.places-head h2{font-size:28px}
   .place{width:40vw}.place .pic{aspect-ratio:16/9}.place p{display:none}.place .row{margin-top:8px}.place h3{font-size:22px}
   .rail-prog{margin-top:10px}
@@ -207,7 +211,7 @@ body.ready .hero-row{opacity:1}
 .done a{color:var(--teal)}
 .err{margin-top:10px;font-size:14.5px;color:#B5432A}
 @media(max-width:760px){
-  .lead{left:12px;right:12px;bottom:12px;width:auto;border-radius:20px;padding:20px 18px 18px}
+  .lead{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));width:auto;border-radius:20px;padding:20px 18px 18px}
   .lead .lead-p{font-size:15px}
   .scene.ended .chapters{opacity:0;transition:opacity .4s}
   #lead{gap:12px 14px;margin-top:16px}

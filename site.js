@@ -9,7 +9,15 @@
   var WA = '972544500539', MAIL = 'netora.studio@gmail.com', BRAND = 'NOHOKAI Resort & Spa';
   var clamp = function(v, a, b){ return v < a ? a : (v > b ? b : v); };
   var ease = function(t){ return t * t * (3 - 2 * t); };
-  var vhpx = function(){ return window.innerHeight; };
+  /* The page's own heights are written in vh, which on phones is the LARGE viewport and stays fixed while the browser toolbar
+     slides in and out. window.innerHeight does change with the toolbar, so measuring with it made the films drift against the
+     scroll. Everything is measured with the same fixed unit instead. */
+  var vhProbe = d.createElement('div');
+  vhProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:100vh;height:100lvh;visibility:hidden;pointer-events:none';
+  body.appendChild(vhProbe);
+  var VH = vhProbe.offsetHeight || window.innerHeight;
+  var vhpx = function(){ return VH; };
+  var isWebKit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg\/|OPR\/|Android/.test(navigator.userAgent);
 
   var yr = d.getElementById('yr');
   if(yr) yr.textContent = new Date().getFullYear();
@@ -34,11 +42,12 @@
     this.base = 'media/' + this.name + (this.tall ? '-tall' : '-wide') + '-v2';
     this.meta = null; this.buf = null; this.off = null; this.loaded = 0; this.complete = false;
     this.mode = 'none';              /* none | codec | video */
-    this.decoder = null; this.busy = false; this.keepRaw = false; this.gen = 0;
+    this.decoder = null; this.busy = false; this.gen = 0;
+    this.keepRaw = params.get('raw') === '1' || (isWebKit && params.get('raw') !== '0');
     this.cache = new Map(); this.req = new Set();
     this.target = 0; this.dir = 1; this.shown = -1; this.painted = false; this.started = false;
     this.keep = this.tall ? 2 : 1;   /* groups kept on each side of the current one */
-    this.stats = {decoded: 0, exact: 0, near: 0, miss: 0};
+    this.stats = {decoded: 0, exact: 0, near: 0, miss: 0, groups: 0, gms: 0, maxLag: 0};
     var self = this;
     if(window.ResizeObserver) new ResizeObserver(function(){ self.resize(); }).observe(this.stage);
     window.addEventListener('resize', function(){ self.resize(); });
@@ -135,6 +144,7 @@
     try{ if(this.decoder && this.decoder.state !== 'closed') this.decoder.close(); }catch(e){}
     this.decoder = null;
     this.fails = (this.fails || 0) + 1;
+    this.keepRaw = !this.keepRaw;                  /* try the other way of holding frames before giving up on the decoder */
     if(this.fails <= 2){ this.open(); } else { this.useVideo(); }
   };
   Film.prototype.decodeGroup = function(g){
@@ -146,7 +156,7 @@
         this.decoder.decode(new EncodedVideoChunk({type: i === a ? 'key' : 'delta', timestamp: i, duration: 1,
           data: this.buf.subarray(this.off[i], this.off[i + 1])}));
       }
-      this.decoder.flush().then(function(){ if(gen === self.gen){ self.busy = false; self.schedule(); } },
+      this.decoder.flush().then(function(){ if(gen === self.gen){ self.stats.groups++; self.stats.gms += performance.now() - self.busySince; self.busy = false; self.schedule(); } },
                                 function(){ if(gen === self.gen) self.codecFail(); });
     }catch(e){ this.codecFail(); }
   };
@@ -279,6 +289,7 @@
         L.k = k;
         s.frame.style.setProperty('--k', k);
         s.el.classList.toggle('open', k > 0.92);
+        s.el.classList.toggle('full', k >= 1);
       }
     }
     var t = g.f * s.dur, ended = g.f >= 0.999 && g.y > g.growPx + g.lenPx - 2;
@@ -365,11 +376,14 @@
 
   var rail = d.querySelector('.places'), track = rail ? rail.querySelector('.track') : null, railX = -1, railOver = 0;
   var railBar = rail ? rail.querySelector('.rail-prog i') : null, railPics = rail ? [].slice.call(rail.querySelectorAll('.pic img')) : [];
+  var railW = 0, railH = 0;
   function sizeRail(){
     if(!rail) return;
+    VH = vhProbe.offsetHeight || window.innerHeight;
     var vp = track.parentNode, cs = getComputedStyle(vp);
     railOver = Math.max(0, track.scrollWidth - (vp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)));
-    rail.style.height = (vhpx() + railOver) + 'px';
+    var h = vhpx() + railOver;
+    if(h !== railH){ railH = h; rail.style.height = h + 'px'; railX = -1; }
   }
   function updateRail(vh){
     if(!rail) return;
@@ -427,7 +441,7 @@
         if(g.y >= g.growPx && g.y < g.growPx + g.lenPx){ speed = g.lenPx / s.dur; break; }   /* inside a film: real time */
       }
       var y = (window.scrollY || window.pageYOffset) + speed * autoMult * dt;
-      var max = docEl.scrollHeight - vh;
+      var max = docEl.scrollHeight - window.innerHeight;
       window.scrollTo(0, Math.min(y, max));
       if(y >= max - 1){ stopAuto(); return; }
       auto = requestAnimationFrame(step);
@@ -513,6 +527,36 @@
       done.appendChild(a2); done.appendChild(d.createTextNode('.'));
       form.insertAdjacentElement('afterend', done);
     });
+  }
+
+  if(params.get('debug') === '1'){
+    var dbg = d.createElement('div');
+    dbg.style.cssText = 'position:fixed;left:8px;top:64px;z-index:999;background:rgba(0,0,0,.8);color:#fff;font:11px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px 10px;border-radius:8px;white-space:pre;pointer-events:none;direction:ltr;text-align:left';
+    body.appendChild(dbg);
+    var gaps = [], lastT = performance.now(), longF = 0, worst = 0, nT = 0;
+    var tick = function(now){
+      var g = now - lastT; lastT = now; gaps.push(g); if(gaps.length > 90) gaps.shift();
+      if(g > 34) longF++; if(g > worst) worst = g;
+      var act = null;
+      for(var i = 0; i < scenes.length; i++){ var r = scenes[i].el.getBoundingClientRect(); if(r.top < VH && r.bottom > 0){ act = scenes[i].film; break; } }
+      if(act && act.meta && act.mode === 'codec' && act.shown >= 0){ var lag = Math.abs(act.shown - act.target); if(lag > act.stats.maxLag) act.stats.maxLag = lag; }
+      if(++nT % 12 === 0){
+        var avg = gaps.reduce(function(a, c){ return a + c; }, 0) / gaps.length, lines = [];
+        lines.push('fps ' + (1000 / avg).toFixed(0) + '  long ' + longF + '  worst ' + worst.toFixed(0) + 'ms');
+        lines.push('inner ' + window.innerHeight + '  vh ' + VH + '  dpr ' + (window.devicePixelRatio || 1));
+        if(act){
+          var st = act.stats, m = act.meta;
+          lines.push('engine ' + act.mode + (act.mode === 'codec' ? (act.keepRaw ? ' raw' : ' bitmap') : '') + '  fails ' + (act.fails || 0));
+          lines.push((m ? m.codec + ' ' + m.width + 'x' + m.height : 'no index') + '  canvas ' + act.canvas.width + 'x' + act.canvas.height);
+          lines.push('loaded ' + (act.loaded / 1e6).toFixed(1) + '/' + (m ? (m.bytes / 1e6).toFixed(1) : '?') + ' MB' + (act.complete ? ' done' : ''));
+          lines.push('frame ' + act.shown + '/' + act.target + '  max lag ' + st.maxLag + '  cache ' + act.cache.size);
+          lines.push('groups ' + st.groups + '  ' + (st.groups ? (st.gms / st.groups).toFixed(0) : '-') + ' ms each  exact ' + st.exact + ' near ' + st.near);
+        } else lines.push('no film on screen');
+        dbg.textContent = lines.join('\n');
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   /* for testing from the console / automated checks */
