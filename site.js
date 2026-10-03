@@ -422,6 +422,8 @@
 
   /* ---------- A = the page scrolls itself, for screen-recording a reel. AUTO_BASE is the speed A starts at, relative to the films' natural speed ---------- */
   var AUTO_BASE = 1.3;
+  /* extra speed per film while the page scrolls itself: the opening flight moves about a third slower on screen than the second film, so on its own speed the tour started too slowly */
+  var AUTO_FILM = {arrival: 1.55};
   var auto = 0, autoLast = 0, autoMult = AUTO_BASE, autoY = 0;
   function stopAuto(){
     if(!auto) return;
@@ -439,7 +441,7 @@
       var vh = vhpx(), speed = vh * 0.42;                       /* ordinary sections */
       for(var i = 0; i < scenes.length; i++){
         var s = scenes[i], g = geom(s);
-        if(g.y >= g.growPx && g.y < g.growPx + g.lenPx){ speed = g.lenPx / s.dur; break; }   /* inside a film: real time */
+        if(g.y >= g.growPx && g.y < g.growPx + g.lenPx){ speed = g.lenPx / s.dur * (AUTO_FILM[s.film.name] || 1); break; }   /* inside a film: real time, times that film's own factor */
       }
       /* the position is kept as a fraction here: the browser rounds scrollY to whole pixels, and adding to the rounded value each frame made the real speed drift from the requested one */
       var cur = window.scrollY || window.pageYOffset; if(Math.abs(cur - autoY) > 3) autoY = cur;
