@@ -39,7 +39,11 @@
     this.poster = scene.querySelector('.poster');
     this.name = scene.getAttribute('data-film');
     this.tall = (window.innerWidth / window.innerHeight) <= 0.62;
-    this.base = 'media/' + this.name + (this.tall ? '-tall-v3' : '-wide-v2');   /* tall-v3: the phone window travels across the wide film instead of staying on its centre */
+    /* phone films. arrival: the window stays on the middle of the wide film from the first frame, so the opening shows the entrance (v2).
+       wellness: the window follows the people through the gym and the yoga studio, then stays on the middle through the flight out to the
+       sea and the closing view of the resort, so the last picture comes to rest instead of sliding sideways (v4). */
+    var TALL = {arrival: '-tall-v2', wellness: '-tall-v4'};
+    this.base = 'media/' + this.name + (this.tall ? (TALL[this.name] || '-tall-v2') : '-wide-v2');
     this.meta = null; this.buf = null; this.off = null; this.loaded = 0; this.complete = false;
     this.mode = 'none';              /* none | codec | video */
     this.decoder = null; this.busy = false; this.gen = 0;
