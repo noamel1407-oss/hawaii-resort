@@ -271,9 +271,34 @@
       dur: parseFloat(el.getAttribute('data-dur')),
       frame: el.querySelector('.frame'), intro: el.querySelector('.hero-ui'), fin: el.querySelector('.lead'),
       bar: el.querySelector('.prog i'), count: el.querySelector('.count b'),
-      last: {ch: -2, fin: null, k: -1, intro: -1, bar: -1}
+      last: {ch: -2, fin: null, k: -1, intro: -1, bar: -1},
+      glide: {on: false, p: 0, v: 0, t: 0}
     };
   });
+  /* ---------- glide: on touch screens the film follows the scroll like a camera with some weight ----------
+     A finger moves a page in bursts: a swipe, a slowdown, the next swipe. Tied frame for frame to the scroll, the film
+     surged with every swipe and almost stood still in between, several times a second. Here the scroll only says where
+     the film should be; the picture travels there on a critically damped spring, so it eases in and out and a run of
+     swipes becomes one continuous flight. The chapter titles, the progress line and the closing form follow the
+     picture, not the scroll, so they stay in step with what is on screen.
+     Not used on desktop (the wheel is already smoothed there) and not while the page scrolls itself (A / ?tour=1),
+     where the film keeps the exact frame-for-frame link. ?glide=0 switches it off, ?glide=7 tries another stiffness. */
+  var GLIDE = 0;
+  var jump = 0, jumpAt = 0, jumpY = -1, jumpStill = 0;            /* a jump from a menu link, the logo or the details button is under way: the film goes straight there, no glide */
+  if(coarse && !reduce){ GLIDE = params.has('glide') ? Math.max(0, parseFloat(params.get('glide')) || 0) : 5; }   /* spring stiffness, 1/s */
+  function follow(s, f, now){
+    var G = s.glide;
+    if(!GLIDE || auto || jump || !G.on){ G.on = true; G.p = f; G.v = 0; G.t = now; return f; }
+    var dt = Math.min((now - G.t) / 1000, 0.1); G.t = now;
+    if(!(dt > 0)) return G.p;
+    /* exact step of a critically damped spring towards f: stable at any frame rate */
+    var d = G.p - f, e = Math.exp(-GLIDE * dt), c = G.v + GLIDE * d;
+    G.p = f + (d + c * dt) * e;
+    G.v = (G.v - GLIDE * c * dt) * e;
+    var eps = 0.3 / (s.dur * 30);                                 /* a third of a frame */
+    if(Math.abs(G.p - f) < eps && Math.abs(G.v) < eps * 4){ G.p = f; G.v = 0; }
+    return clamp(G.p, 0, 1);
+  }
   function geom(s){
     var vh = vhpx(), r = s.el.getBoundingClientRect(), y = -r.top;
     var growPx = s.grow * vh / 100, lenPx = s.len * vh / 100;
@@ -281,11 +306,12 @@
             k: s.grow ? clamp(y / growPx, 0, 1) : 1, f: clamp((y - growPx) / lenPx, 0, 1),
             near: r.bottom > -vh && r.top < vh * 2.5};
   }
-  function updateScene(s){
+  function updateScene(s, now){
     var g = geom(s), L = s.last;
-    if(!g.near){ s.film.sleep(); return g; }
+    if(!g.near){ s.film.sleep(); s.glide.on = false; return g; }
     s.film.load();
-    s.film.setTarget(g.f);
+    var f = follow(s, g.f, now);                                  /* where the picture is; equals g.f whenever the glide is off */
+    s.film.setTarget(f);
     /* the wellness film starts as a card on the page and opens to full screen */
     if(s.frame && s.grow){
       var k = Math.round(ease(g.k) * 1000) / 1000;
@@ -296,7 +322,7 @@
         s.el.classList.toggle('full', k >= 1);
       }
     }
-    var t = g.f * s.dur, ended = g.f >= 0.999 && g.y > g.growPx + g.lenPx - 2;
+    var t = f * s.dur, ended = f >= 0.999 && g.y > g.growPx + g.lenPx - 2;
     var on = -1;
     if(!ended){ for(var i = 0; i < s.chapters.length; i++){ if(t >= s.chapters[i].a && t < s.chapters[i].b){ on = i; break; } } }
     else if(s.chapters.length && s.chapters[s.chapters.length - 1].el.hasAttribute('data-stay')) on = s.chapters.length - 1;
@@ -310,7 +336,7 @@
       if(io !== L.intro){ L.intro = io; s.intro.style.opacity = io; s.intro.style.transform = 'translate3d(0,' + ((1 - io) * -46).toFixed(1) + 'px,0)'; s.intro.style.visibility = io ? 'visible' : 'hidden'; }
     }
     if(s.bar){
-      var b = Math.round(g.f * 1000) / 1000;
+      var b = Math.round(f * 1000) / 1000;
       if(b !== L.bar){ L.bar = b; s.bar.style.transform = 'scaleX(' + b + ')'; }
     }
     return g;
@@ -331,7 +357,7 @@
     if(!a) return;
     var el = d.getElementById(a.getAttribute('href').slice(1));
     if(!el) return;
-    e.preventDefault(); stopAuto(); scrollToEl(el);
+    e.preventDefault(); stopAuto(); jump = 1; jumpAt = performance.now(); jumpStill = 0; scrollToEl(el);
   });
 
   /* ---------- ordinary sections: reveals, word-by-word statement, counters, the sideways rail ---------- */
@@ -459,6 +485,7 @@
   }
   window.addEventListener('wheel', stopAuto, {passive: true});
   window.addEventListener('touchstart', stopAuto, {passive: true});
+  window.addEventListener('touchstart', function(){ jump = 0; }, {passive: true});
   window.addEventListener('keydown', function(e){
     var t = e.target;
     if(t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
@@ -471,8 +498,13 @@
   /* ---------- frame loop ---------- */
   function loop(now){
     if(lenis) lenis.raf(now);
+    if(jump){                                                    /* the jump is over once the page has stood still for a moment */
+      var jy = window.scrollY || window.pageYOffset;
+      if(Math.abs(jy - jumpY) < 0.5){ if(++jumpStill > 12 && now - jumpAt > 400) jump = 0; } else jumpStill = 0;
+      jumpY = jy;
+    }
     var vh = vhpx();
-    for(var i = 0; i < scenes.length; i++){ updateScene(scenes[i]); scenes[i].film.watch(now); }
+    for(var i = 0; i < scenes.length; i++){ updateScene(scenes[i], now); scenes[i].film.watch(now); }
     if(scenes.length > 1 && scenes[0].film.complete) scenes[1].film.load();     /* the second film downloads quietly once the first is in */
     updateSay(vh); updateRail(vh); updateNav();
     requestAnimationFrame(loop);
@@ -569,5 +601,5 @@
   }
 
   /* for testing from the console / automated checks */
-  window.__site = {scenes: scenes, startAuto: startAuto, stopAuto: stopAuto, lenis: function(){ return lenis; }};
+  window.__site = {scenes: scenes, startAuto: startAuto, stopAuto: stopAuto, lenis: function(){ return lenis; }, glide: GLIDE};
 })();

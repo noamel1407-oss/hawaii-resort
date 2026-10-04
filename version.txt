@@ -1,1 +1,1 @@
-build 2026-10-04 22:55 (Israel time) - phone films: opening back on the entrance, closing view comes to rest
+build 2026-10-04 23:20 (Israel time) - phone: the films glide after the scroll instead of snapping to it
